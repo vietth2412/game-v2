@@ -195,7 +195,7 @@ var initCanvas = function () {
 			e.preventDefault();
 		}
 	});
-	$('.html-jump').click(()=>{
+	$('.html-jump').click(() => {
 		jump();
 	})
 }
@@ -602,7 +602,7 @@ window.onload = function () {
 	const screenHeight = window.innerHeight - (screenWidth > 768 ? 50 : 0);
 	let ratio = screenWidth / 660;
 	let needContentHeight = ratio * 876;
-	while(needContentHeight > screenHeight){
+	while (needContentHeight > screenHeight) {
 		ratio = 0.999 * ratio;
 		needContentHeight = 0.999 * needContentHeight;
 	}
@@ -626,23 +626,23 @@ window.onload = function () {
 	// // 	canvas.height = height = Math.min(875, window.innerHeight);
 	// // 	drawCanvas();
 	// // }
-	const newTop = 40* ratio+'%';
+	const newTop = 40 * ratio + '%';
 	// $('#content-wrapper').css( "top",newTop )
 	console.log(newTop);
-	
+
 }
 // handle screens logic
 function switchScreen(screenId) {
 	$('.screen').removeClass('active');
 	$('#' + screenId).addClass('active');
 }
-function apiSaveScore(name,phone,receipt, score) {
+function apiSaveScore(name, phone, receipt, score) {
 	const url = 'https://uat-api.flowco.io/game/submit-score';
 	const data = {
 		username: name,
 		score: score,
-		phone:phone,
-		receiptNumber:receipt
+		phone: phone,
+		receiptNumber: receipt
 	}
 	return fetch(url, {
 		method: 'POST',
@@ -657,8 +657,8 @@ function apiSaveScore(name,phone,receipt, score) {
 	})
 }
 
-function apiCheckRank(score){
-	const url = 'https://uat-api.flowco.io/game/rank?score='+score;
+function apiCheckRank(score) {
+	const url = 'https://uat-api.flowco.io/game/rank?score=' + score;
 	return fetch(url, {
 		method: 'GET',
 		mode: 'cors',
@@ -687,26 +687,26 @@ function openEndScreen() {
 		console.log('play again');
 		location.reload();
 	});
-	// setTimeout(() => {
-	// 	if(!$('#screen-gameover').attr('class').includes('hide')){
-	// 		$('#screen-gameover').click();
-	// 	}
-	// }, 2000);
+	setTimeout(() => {
+		if (!$('#screen-gameover').attr('class').includes('hide')) {
+			$('#screen-gameover').click();
+		}
+	}, 2000);
 	$('#screen-gameover').click(function () {
 
-		apiCheckRank(score).then(res=>{
+		apiCheckRank(score).then(res => {
 			$('.rank-score').html(res.rank);
 			// $('.rank-total-user').html(res.totalPlayer)
-			console.log('res:',res);
-			if(res.rank<50){
+			console.log('res:', res);
+			if (res.rank < 50) {
 				$('.under-top').addClass('hide');
 				// $('#header-submit-form').css( "background",'none' )
-			}else{
+			} else {
 				$('.top-score').addClass('hide')
 				$('#form-save-score').removeClass('top-rank-skew')
 				$('#form-save-score').addClass('under-rank-skew')
 			}
-		}).catch(err=>{
+		}).catch(err => {
 			console.log(err);
 		})
 		$('#screen-gameover').addClass('hide');
@@ -736,7 +736,7 @@ function openEndScreen() {
 		}
 		if (name && phone) {
 			switchScreen('screen-board');
-			apiSaveScore(name,phone,receipt, score).then(function (res) {
+			apiSaveScore(name, phone, receipt, score).then(function (res) {
 				soundLeaderBoard.play();
 				for (let i = 0; i < res.length; i++) {
 					const el = `<tr>
@@ -751,21 +751,61 @@ function openEndScreen() {
 }
 
 
-function share(type) {
-	const appUrl = location.href;
+async function share(type) {
+
 	let redirectTo = '';
+	const imageUrl = await capture();
+	const appUrl = imageUrl;
+	const content = encodeURIComponent('Beat the Blocks & stand a chance to win exciting prizes - Play Now. https://flowco.io/MnMGame')
+	// return
 	switch (type) {
 		case 'facebook':
-			redirectTo = `https://www.facebook.com/sharer/sharer.php?u=${appUrl}`;
+			redirectTo = `https://www.facebook.com/sharer/sharer.php?u=${appUrl}&quote=${content}`;
 			break;
 		case 'twitter':
-			redirectTo = `http://twitter.com/share?url=${appUrl}`;
+			redirectTo = `http://twitter.com/share?url=${appUrl}&text=${content}`;
 			break;
 		case 'whatsapp':
-			redirectTo = ` https://wa.me/?text=${appUrl}`;
+			redirectTo = ` https://wa.me/?text=${encodeURIComponent(appUrl)}`;
 			break;
 		default:
 			break;
 	}
 	window.open(redirectTo);
+}
+function closePopup() {
+	window.parent.postMessage('closePopup', '*');
+}
+async function capture() {
+	const canvas = await html2canvas(document.querySelector("#content-wrapper"));
+	const base64 = canvas.toDataURL();
+	const blob = dataURLtoBlob(base64);
+	const responseUpload = await uploadFile(blob);
+	const url = responseUpload.data[0].url
+	return url;
+}
+async function uploadFile(file) {
+	const url = 'https://uat-api.flowco.io/files/upload';
+	const formData = new FormData();
+	formData.append('appId', 'm2m-game');
+	formData.append('fileType', 'images');
+	formData.append('files', file)
+	return $.ajax({
+		type: 'POST',
+		url: url,
+		data: formData,
+		headers: {
+			contentType: 'application/json',
+		},
+		processData: false, // tell jQuery not to process the data
+		contentType: false, // tell jQuery not to set contentType
+	});
+}
+function dataURLtoBlob(dataurl) {
+	var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+		bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+	while (n--) {
+		u8arr[n] = bstr.charCodeAt(n);
+	}
+	return new Blob([u8arr], { type: mime });
 }
