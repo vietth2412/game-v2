@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black">
+	<meta name="format-detection" content="telephone=no">
+	<title>M2M Game</title>
+	<meta property="og:title" content="M2M Game">
+	<meta name="description" content="M2M Beat the Block">
+	<script type='application/javascript' src="fastclick.js"></script>
+	<link href="assets/style.css" rel="stylesheet" />
+	<script type="application/javascript" src="fb.js"></script>
+	<!-- Global site tag (gtag.js) - Google Analytics -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-ERC1N3GX8S"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() { dataLayer.push(arguments); }
+		gtag('js', new Date());
+
+		gtag('config', 'G-ERC1N3GX8S');
+	</script>
+</head>
+<style>
+	@font-face {
+		font-family: "Press Start 2P";
+		src: url("PressStart2P.ttf") format('truetype');
+	}
+
+	* {
+		cursor: pointer;
+		-moz-user-select: none;
+		-webkit-user-select: none;
+		-ms-user-select: none;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	::selection {
+		background: transparent;
+	}
+
+	::-moz-selection {
+		background: transparent;
+	}
+
+	.option,
+	.mode {
+		display: inline-block;
+		width: 70px;
+		height: 20px;
+		background: rgba(255, 255, 255, 0.6);
+		position: absolute;
+		top: 2px;
+		text-align: center;
+		font-size: 11px;
+		font-family: "Press Start 2P";
+		padding-top: 5px;
+		z-index: 2;
+	}
+
+	.option:hover,
+	.mode:hover {
+		background: #fff;
+	}
+
+	#modes {
+		position: absolute;
+		top: 28px;
+	}
+
+	#easy,
+	#flashlight {
+		left: 2px;
+	}
+
+	#normal,
+	#hidden {
+		left: 74px;
+	}
+
+	#hard {
+		left: 146px;
+	}
+
+	canvas {
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.control {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		left: 0;
+		background: #ffffff8c;
+		border-radius: 20px;
+		margin-left: 20px;
+		border: 2px solid #fff;
+	}
+
+	.control .btn {
+		width: 50px;
+		height: 50px;
+		border-radius: 10px;
+		cursor: pointer;
+		margin: 10px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		color: white;
+		font-weight: 600;
+	}
+
+	.btn-speedup {
+		width: 100px;
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		bottom: 1%;
+	}
+
+	.btn-speedup img {
+		width: 100%;
+	}
+
+	.screen-gameover {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-direction: column;
+		width: 100%;
+		background: rgba(0, 0, 0, 0.5);
+	}
+
+	.w-100 {
+		width: 100% !important;
+	}
+
+	/* @media only screen and (min-width: 775px) { */
+	body {
+		align-items: center;
+		background-image: url('https://cdx.flowco.io/prod/uploads/images/1629695958772-88.jpg');
+		background-size: cover;
+		background-repeat: repeat;
+	}
+
+	/* } */
+</style>
+
+<body
+	style="padding:0;margin:0;outline:0;overflow:hidden;display: flex;justify-content: center;background-color: #6B381D;position: fixed; width: 100%; height: 100%;align-items: center">
+	<div class="content-wrapper" id="content-wrapper">
+		<div id="game" style="position: absolute; width: 100%; height: 100%">
+			<canvas id="canvas"></canvas>
+			<div class="timer speedup html-jump" style="top: 10px;"> <span>X</span><span id="speedup-level">1</span>
+			</div>
+			<div class="footer" id="footer-game">
+				<img id="faster" class="html-jump" style="position: absolute;
+				top: -40px;
+				left: 50%;
+				transform: translateX(-50%);" src="./images/faster.png" />
+				<button type="button" class="btn btn-boost html-action" onclick="speedUp()">Boost</button>
+				<div class="timer html-jump"> <span>00:</span><span id="timer">45</span></div>
+			</div>
+
+			<div class="control" id="control-btn-group">
+				<div class="btn" onclick="up()" style="margin-bottom: 10px;">
+					<img class="w-100" src="images/Up.png" />
+				</div>
+				<div class="btn" onclick="down()">
+					<img class="w-100" src="images/Down.png" />
+				</div>
+			</div>
+		</div>
+		<div class="overide-screen" id="screen-group">
+			<div class="screen-start" id="screen-start">
+				<div class="header text-center">
+					<img src="images/header.png" />
+				</div>
+				<div class="icon-game">
+					<img src="images/start-game.png" width="100%" />
+				</div>
+				<div class="button-group">
+					<div></div>
+					<img onclick="gameStart(1)" class="btn btn-bubble bg-red" src="./images/tap-to-play.png" />
+				</div>
+			</div>
+			<div class="screen screen-gameover hide" id="screen-gameover">
+				<img class="w-70" src="./images/game-over.png" />
+			</div>
+			<div class="container hide" id="container">
+				<div class="all-screens">
+					<div class="screen screen1" id="screen-form">
+						<div class="main-content ">
+							<div class="form-action">
+								<div class="bg-skew top-rank-skew" id="form-save-score">
+									<div class="bg-total text-center top-score">
+										<div class="title">
+											<h3 class="pdb-15">Your Current Rank</h3>
+											<h2> <span class="score rank-score" id="rank">5</span> / <span
+													class="rank-total-user">50</span></h2>
+										</div>
+										<h3 class="pdb-15">
+											<div>LEAVE YOUR DETAILS</div>
+											<div>BELOW <span class="score">TO WIN</span></div>
+										</h3>
+
+									</div>
+									<form>
+										<div class="form-group mb-20">
+											<label for="name">Name</label>
+											<input class="mt-5" type="text" id="name" name="name"
+												placeholder="Enter your name here..." />
+											<small id="name-invalid" style="color: red;display: none;">Name is
+												required</small>
+										</div>
+										<div class="form-group mb-20">
+											<label for="phone">Phone</label>
+											<input class="mt-5" type="tel" id="phone" name="phone"
+												placeholder="Enter your phone here...">
+											<small id="phone-invalid" style="color: red;display: none;">phone number is
+												required</small>
+										</div>
+										<div class="form-group">
+											<label for="receipt">RECEIPT (OPTIONAL)</label>
+											<input type="text" class="mt-5" id="receipt" name="receipt"
+												placeholder="Enter your receipt number...">
+										</div>
+									</form>
+								</div>
+								<div class="group-button">
+									<button class="btn btn-again bg-yellow btn-playagain">
+										<span class="icon-btn">
+											<img src="assets/icon/return.svg" width="100%" />
+										</span>
+										<span>Tap to</span>
+										<span>Play Again!</span>
+									</button>
+									<img id="btn-save-score" class="revert-skew" width="150"
+										src="./images/submit.png" />
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="screen screen2" id="screen-board">
+						<div class="main-content">
+							<form class="form-action">
+								<div class="bg-skew" style="width: 293px;height: 530px;">
+									<!-- <div class="score leader-board">
+                                        <h3>Leaderboard</h3>
+                                    </div> -->
+									<div class="bg-total text-center" style="margin-top: 145px;">
+										<div class="title leaderboard-title">
+											<h3>Your Current Rank</h3>
+											<h2> <span class="score rank-score">5</span> / <span
+													class="rank-total-use">50</span></h2>
+										</div>
+									</div>
+									<div class="table-scroll">
+										<table>
+											<thead>
+												<tr>
+													<th>Name</th>
+													<th>Score</th>
+												</tr>
+											</thead>
+											<tbody id="table-body">
+											</tbody>
+										</table>
+									</div>
+								</div>
+
+							</form>
+						</div>
+						<div class="group-button btn-playagain">
+							<button class="btn btn-again bg-yellow">
+								<span class="icon-btn">
+									<img src="assets/icon/return.svg" width="100%" />
+								</span>
+								<span>Tap to</span>
+								<span>Play Again!</span>
+							</button>
+							<button onclick="location.reload()" class="btn btn-submit bg-blue skew-3">
+								<span class="icon-btn">
+									<svg xmlns="http://www.w3.org/2000/svg" width="46.701" height="39.689"
+										viewBox="0 0 46.701 39.689">
+										<path id="Union_23" data-name="Union 23"
+											d="M29.714,39.689V32.165s.418-3.372-1.507-5.6a5.513,5.513,0,0,0-4.856-1.687V0L46.7,21.03H42.283V39.689Zm-25.3,0V21.03H0L23.351,0V24.879a5.513,5.513,0,0,0-4.856,1.687c-1.924,2.228-1.507,5.6-1.507,5.6v7.524Z"
+											fill="#fcffff" />
+									</svg>
+
+								</span>
+								<span>Home</span>
+							</button>
+						</div>
+					</div>
+					<div class="screen screen3 active" id="screen-finish">
+						<div class="main-content">
+							<!-- <div class="header-top skew-2" style="height: 252px;">
+							</div> -->
+							<div class="header-bottom skew-2 bg-total">
+								<div class="title">
+									<h3>Total Scores:</h3>
+									<h2 class="scores pdb-15">1</h2>
+									<h3 class="pdb-15 line-height-0">Your Current Rank</h3>
+									<h2> <span class="score rank-score" id="rank">5</span> / <span
+											class="rank-total-user">50</span></h2>
+								</div>
+							</div>
+						</div>
+
+						<div class="button-group button-group-inline">
+							<p class="btn-goto-form">
+								<img src="./images/reg-score.png" id="btn-goto-form" />
+							</p>
+							<img class="btn-playagain" src="./images/play-again.png" />
+							<!-- <button type="button" id="btn-goto-form" class="btn btn-bubble bg-green">
+                                    <span class="small">Tap for</span>
+                                    <span class="big">Next</span>
+                                    <span class="big">Steps</span>
+                                </button> -->
+							<!-- <button type="button" class="btn btn-bubble bg-red btn-playagain">
+                                    <span class="small">Tap for</span>
+                                    <span class="big">Play</span>
+                                    <span class="big">Again</span>
+                                </button> -->
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="share-button hide left-120" id="share-button">
+				<p>Share your result on</p>
+				<div class="d-flex">
+					<span onclick="share('facebook')">
+						<img src="assets/icon/facebook.jpg" width="100%" />
+					</span>
+					<span onclick="share('twitter')">
+						<img src="assets/icon/twitter.png" width="100%" />
+					</span>
+					<span onclick="share('whatsapp')">
+						<img src="assets/icon/phone.png" width="100%" />
+					</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	</div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js" async></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+	<script src="./html2canvas.min.js"></script>
+</body>
+
+</html>
