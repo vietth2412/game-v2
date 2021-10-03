@@ -741,7 +741,7 @@ function openEndScreen() {
 				for (let i = 0; i < res.length; i++) {
 					const el = `<tr>
 									<td>${res[i].username}</td>
-									<td>${res[i].score}</td>
+									<td>${res[i].score} PTS</td>
 								</tr>`
 					$('#table-body').append(el);
 				}
@@ -755,8 +755,8 @@ async function share(type) {
 
 	let redirectTo = '';
 	const imageUrl = await capture();
-	const appUrl = imageUrl;
-	const content = encodeURIComponent('Beat the Blocks & stand a chance to win exciting prizes - Play Now. https://flowco.io/MnMGame')
+	const appUrl =  'https://us-central1-silverbullet-sandbox.cloudfunctions.net/preview?url='+imageUrl;
+	const content = encodeURIComponent('Beat the Blocks & stand a chance to win exciting prizes')
 	// return
 	switch (type) {
 		case 'facebook':
